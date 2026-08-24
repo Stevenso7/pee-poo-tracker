@@ -1,0 +1,36 @@
+# Local development only. For production, the API is usually run via the
+# Dockerfile on a PaaS (Railway/Render/Fly/Cloud Run), and the database is Supabase.
+#
+# Usage:
+#   cp .env.example .env   (fill in SUPABASE_URL / keys)
+#   docker compose up -d postgres
+#   docker compose up -d api
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pee-poo-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pee_poo_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - pee-poo-db:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: pee-poo-api
+    env_file:
+      - apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pee_poo_tracker
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+
+volumes:
+  pee-poo-db:

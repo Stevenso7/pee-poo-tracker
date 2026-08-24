@@ -1,0 +1,21 @@
+{
+  "name": "pee-poo-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A fun, Cantonese-first bathroom logging app (React Native + NestJS + Supabase + Gemini).",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @pee-poo/shared",
+    "build:api": "npm run build -w @pee-poo/api",
+    "dev:api": "npm run start:dev -w @pee-poo/api",
+    "dev:mobile": "npm run start -w @pee-poo/mobile",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

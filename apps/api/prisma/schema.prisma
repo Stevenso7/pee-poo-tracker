@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RecordType {
+  PEE
+  POO
+}
+
+enum PeeColor {
+  TRANSPARENT
+  PALE_YELLOW
+  YELLOW
+  DARK_YELLOW
+  AMBER
+  BROWN
+  RED_PINK
+  BLUE_GREEN
+  CLOUDY
+}
+
+enum PeeFoam {
+  NONE
+  SLIGHT
+  MODERATE
+  HEAVY
+}
+
+enum PeeVolume {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum PooColor {
+  BROWN
+  DARK_BROWN
+  YELLOW
+  GREEN
+  BLACK
+  RED
+  PALE_CLAY
+  GREY
+}
+
+enum AnalysisStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+model Profile {
+  userId               String   @id @db.Uuid
+  language             String   @default("yue")
+  reminderEnabled      Boolean  @default(false)
+  reminderTimes        String[] @default([])
+  photoRetentionDays   Int      @default(14)
+  plan                 Plan     @default(FREE)
+  analysisUsedThisMonth Int     @default(0)
+  analysisMonth        String   @default("")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  records  Record[]
+  analyses Analysis[]
+
+  @@map("profiles")
+}
+
+model Record {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @db.Uuid
+  type         RecordType
+  recordedAt   DateTime   @db.Timestamptz(6)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+
+  peeColor     PeeColor?
+  peeFoam      PeeFoam?
+  peeVolume    PeeVolume?
+
+  pooColor     PooColor?
+  pooConsistency Int?
+
+  notes        String?
+
+  photoStoragePath String?
+  photoContentType String?
+  photoSizeBytes   Int?
+  photoUploadedAt  DateTime? @db.Timestamptz(6)
+
+  profile  Profile  @relation(fields: [userId], references: [userId])
+  analysis Analysis?
+
+  @@index([userId, recordedAt])
+  @@map("records")
+}
+
+model Analysis {
+  id             String         @id @default(uuid()) @db.Uuid
+  recordId       String         @unique @db.Uuid
+  userId         String         @db.Uuid
+  model          String
+  status         AnalysisStatus @default(PENDING)
+  inputSnapshot  Json?
+  reportJson     Json?
+  reportText     String?
+  disclaimer     String?
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6)
+  completedAt    DateTime?      @db.Timestamptz(6)
+
+  record  Record  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@map("analyses")
+}
