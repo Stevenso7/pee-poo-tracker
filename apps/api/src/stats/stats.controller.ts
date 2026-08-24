@@ -16,11 +16,18 @@ export class StatsController {
     @CurrentUser() user: CurrentUserInfo,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('tz') tz?: string,
   ) {
-    const end = to ?? new Date().toISOString().slice(0, 10);
+    const tzOffset = Math.max(-840, Math.min(840, Number(tz) || 0));
+    const localToday = new Date(Date.now() + tzOffset * 60_000)
+      .toISOString()
+      .slice(0, 10);
+    const end = to ?? localToday;
     const start =
       from ??
-      new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    return this.stats.summary(user.userId, start, end);
+      new Date(Date.parse(`${end}T00:00:00Z`) - 29 * 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+    return this.stats.summary(user.userId, start, end, tzOffset);
   }
 }

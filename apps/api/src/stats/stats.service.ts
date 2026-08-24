@@ -5,12 +5,15 @@ import { PrismaService } from '../prisma/prisma.service';
 export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async summary(userId: string, from: string, to: string) {
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
+  async summary(userId: string, from: string, to: string, tzOffsetMinutes = 0) {
+    // from/to are calendar dates in the user's timezone; tzOffsetMinutes is the
+    // offset to ADD to UTC to get local time (e.g. 480 for UTC+8).
+    const offsetMs = tzOffsetMinutes * 60_000;
+    const fromDate = new Date(Date.parse(`${from}T00:00:00Z`) - offsetMs);
+    const toDate = new Date(Date.parse(`${to}T00:00:00Z`) - offsetMs + 86_400_000);
 
     const records = await this.prisma.record.findMany({
-      where: { userId, recordedAt: { gte: fromDate, lte: toDate } },
+      where: { userId, recordedAt: { gte: fromDate, lt: toDate } },
       select: { type: true, recordedAt: true, peeColor: true, pooConsistency: true },
     });
 
@@ -24,7 +27,9 @@ export class StatsService {
     const pooConsistencyCounts = new Map<number, number>();
 
     for (const r of records) {
-      const date = r.recordedAt.toISOString().slice(0, 10);
+      const date = new Date(r.recordedAt.getTime() + offsetMs)
+        .toISOString()
+        .slice(0, 10);
       const entry = dailyMap.get(date) ?? { date, peeCount: 0, pooCount: 0 };
 
       if (r.type === 'PEE') {

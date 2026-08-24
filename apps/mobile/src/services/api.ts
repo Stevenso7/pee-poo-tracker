@@ -121,7 +121,14 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ force }) },
     ),
 
-  getSummary: () => apiFetch<StatsSummary>('/stats/summary'),
+  getSummary: (params?: { from?: string; to?: string; tz?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.from) qs.set('from', params.from);
+    if (params?.to) qs.set('to', params.to);
+    if (params?.tz != null) qs.set('tz', String(params.tz));
+    const query = qs.toString();
+    return apiFetch<StatsSummary>(`/stats/summary${query ? `?${query}` : ''}`);
+  },
 
   getSettings: () => apiFetch<SettingsView>('/settings'),
 
