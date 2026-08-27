@@ -9,6 +9,7 @@
 ---
 
 ## Table of Contents
+
 1. [Repository & Project Structure](#1-repository--project-structure)
 2. [Shared Types, Enums & Constants](#2-shared-types-enums--constants)
 3. [Database Schema (Prisma)](#3-database-schema-prisma)
@@ -75,6 +76,7 @@ apps/mobile/
 ```
 
 Key dependencies:
+
 - `expo`, `expo-router`, `expo-image-picker`, `expo-camera`, `expo-notifications`
 - `@supabase/supabase-js`
 - `@tanstack/react-query`
@@ -114,6 +116,7 @@ apps/api/
 ```
 
 Key dependencies:
+
 - `@nestjs/*`, `@prisma/client`, `prisma`
 - `@supabase/supabase-js` (storage + auth admin verification)
 - `jwks-rsa` + `passport-jwt` (verify Supabase JWT)
@@ -128,15 +131,15 @@ Key dependencies:
 
 ### 2.1 Enums (machine values)
 
-| Enum | Values |
-|---|---|
-| `RecordType` | `PEE`, `POO` |
-| `PeeColor` | `TRANSPARENT`, `PALE_YELLOW`, `YELLOW`, `DARK_YELLOW`, `AMBER`, `BROWN`, `RED_PINK`, `BLUE_GREEN`, `CLOUDY` |
-| `PeeFoam` | `NONE`, `SLIGHT`, `MODERATE`, `HEAVY` |
-| `PeeVolume` | `SMALL`, `MEDIUM`, `LARGE` |
-| `PooColor` | `BROWN`, `DARK_BROWN`, `YELLOW`, `GREEN`, `BLACK`, `RED`, `PALE_CLAY`, `GREY` |
-| `AnalysisStatus` | `PENDING`, `COMPLETED`, `FAILED` |
-| `Plan` | `FREE`, `PREMIUM` |
+| Enum             | Values                                                                                                      |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| `RecordType`     | `PEE`, `POO`                                                                                                |
+| `PeeColor`       | `TRANSPARENT`, `PALE_YELLOW`, `YELLOW`, `DARK_YELLOW`, `AMBER`, `BROWN`, `RED_PINK`, `BLUE_GREEN`, `CLOUDY` |
+| `PeeFoam`        | `NONE`, `SLIGHT`, `MODERATE`, `HEAVY`                                                                       |
+| `PeeVolume`      | `SMALL`, `MEDIUM`, `LARGE`                                                                                  |
+| `PooColor`       | `BROWN`, `DARK_BROWN`, `YELLOW`, `GREEN`, `BLACK`, `RED`, `PALE_CLAY`, `GREY`                               |
+| `AnalysisStatus` | `PENDING`, `COMPLETED`, `FAILED`                                                                            |
+| `Plan`           | `FREE`, `PREMIUM`                                                                                           |
 
 `pooConsistency` is an **integer 1–7** (Bristol scale), not an enum (validation via
 constraint + zod).
@@ -145,68 +148,90 @@ constraint + zod).
 
 ```ts
 export const PEE_COLOR_LABELS: Record<PeeColor, string> = {
-  TRANSPARENT: '透明', PALE_YELLOW: '淡黃', YELLOW: '黃',
-  DARK_YELLOW: '深黃', AMBER: '琥珀', BROWN: '啡色',
-  RED_PINK: '紅/粉紅', BLUE_GREEN: '藍/綠', CLOUDY: '混濁',
+	TRANSPARENT: "透明",
+	PALE_YELLOW: "淡黃",
+	YELLOW: "黃",
+	DARK_YELLOW: "深黃",
+	AMBER: "琥珀",
+	BROWN: "啡色",
+	RED_PINK: "紅/粉紅",
+	BLUE_GREEN: "藍/綠",
+	CLOUDY: "混濁",
 };
 
 export const PEE_FOAM_LABELS = {
-  NONE: '無泡', SLIGHT: '少少泡', MODERATE: '中等', HEAVY: '好多泡',
+	NONE: "無泡",
+	SLIGHT: "少少泡",
+	MODERATE: "中等",
+	HEAVY: "好多泡",
 } as const;
 
 export const PEE_VOLUME_LABELS = {
-  SMALL: '少', MEDIUM: '中等', LARGE: '多',
+	SMALL: "少",
+	MEDIUM: "中等",
+	LARGE: "多",
 } as const;
 
 export const POO_COLOR_LABELS = {
-  BROWN: '啡色', DARK_BROWN: '深啡', YELLOW: '黃色', GREEN: '綠色',
-  BLACK: '黑色', RED: '紅色', PALE_CLAY: '淺色/泥色', GREY: '灰色',
+	BROWN: "啡色",
+	DARK_BROWN: "深啡",
+	YELLOW: "黃色",
+	GREEN: "綠色",
+	BLACK: "黑色",
+	RED: "紅色",
+	PALE_CLAY: "淺色/泥色",
+	GREY: "灰色",
 } as const;
 
 export const POO_CONSISTENCY_LABELS: Record<number, string> = {
-  1: '一粒粒，好硬', 2: '一條條，表面凹凸', 3: '一條條，有裂紋',
-  4: '一條條，滑捋捋', 5: '一舊舊，軟熟', 6: '糊狀', 7: '水狀',
+	1: "一粒粒，好硬",
+	2: "一條條，表面凹凸",
+	3: "一條條，有裂紋",
+	4: "一條條，滑捋捋",
+	5: "一舊舊，軟熟",
+	6: "糊狀",
+	7: "水狀",
 };
 ```
 
 ### 2.3 Shared zod schemas (used by client + server)
 
 ```ts
-export const RecordTypeEnum = z.enum(['PEE', 'POO']);
+export const RecordTypeEnum = z.enum(["PEE", "POO"]);
 
-export const CreateRecordSchema = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('PEE'),
-    recordedAt: z.coerce.date(),
-    peeColor: z.nativeEnum(PeeColor).optional(),
-    peeFoam: z.nativeEnum(PeeFoam).optional(),
-    peeVolume: z.nativeEnum(PeeVolume).optional(),
-    notes: z.string().max(500).optional(),
-    needsPhotoUpload: z.boolean().optional(),
-  }),
-  z.object({
-    type: z.literal('POO'),
-    recordedAt: z.coerce.date(),
-    pooColor: z.nativeEnum(PooColor).optional(),
-    pooConsistency: z.number().int().min(1).max(7).optional(),
-    notes: z.string().max(500).optional(),
-    needsPhotoUpload: z.boolean().optional(),
-  }),
+export const CreateRecordSchema = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("PEE"),
+		recordedAt: z.coerce.date(),
+		peeColor: z.nativeEnum(PeeColor).optional(),
+		peeFoam: z.nativeEnum(PeeFoam).optional(),
+		peeVolume: z.nativeEnum(PeeVolume).optional(),
+		notes: z.string().max(500).optional(),
+		needsPhotoUpload: z.boolean().optional(),
+	}),
+	z.object({
+		type: z.literal("POO"),
+		recordedAt: z.coerce.date(),
+		pooColor: z.nativeEnum(PooColor).optional(),
+		pooConsistency: z.number().int().min(1).max(7).optional(),
+		notes: z.string().max(500).optional(),
+		needsPhotoUpload: z.boolean().optional(),
+	}),
 ]);
 
 export const AnalysisReportSchema = z.object({
-  summary: z.string(),
-  observations: z.object({
-    color: z.string().optional(),
-    clarity: z.string().optional(),
-    foam: z.string().optional(),
-    consistency: z.string().optional(),
-  }),
-  possibleInterpretations: z.array(z.string()),
-  lifestyleHints: z.array(z.string()),
-  redFlags: z.array(z.string()),
-  confidence: z.enum(['low', 'medium', 'high']),
-  disclaimer: z.string(),
+	summary: z.string(),
+	observations: z.object({
+		color: z.string().optional(),
+		clarity: z.string().optional(),
+		foam: z.string().optional(),
+		consistency: z.string().optional(),
+	}),
+	possibleInterpretations: z.array(z.string()),
+	lifestyleHints: z.array(z.string()),
+	redFlags: z.array(z.string()),
+	confidence: z.enum(["low", "medium", "high"]),
+	disclaimer: z.string(),
 });
 ```
 
@@ -345,6 +370,7 @@ model Analysis {
 ```
 
 ### Migration-level CHECK constraints (Prisma does not auto-emit these)
+
 ```sql
 ALTER TABLE records
   ADD CONSTRAINT chk_poo_consistency CHECK (poo_consistency BETWEEN 1 AND 7);
@@ -354,6 +380,7 @@ ALTER TABLE profiles
 ```
 
 ### RLS (safety net only)
+
 NestJS connects with the **service role** key and enforces per-user scoping in
 queries (`WHERE user_id = ...`). Optionally enable RLS and add policies so direct
 client access is also constrained; the backend remains the source of truth.
@@ -375,7 +402,7 @@ client access is also constrained; the backend remains the source of truth.
 ```ts
 // auth/jwt-auth.guard.ts (sketch)
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+export class JwtAuthGuard extends AuthGuard("jwt") {}
 // JwtStrategy: secretOrKeyProvider via jwks-rsa pointing to
 // `${SUPABASE_URL}/auth/v1/jwks`; jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
 ```
@@ -390,34 +417,53 @@ Errors use a consistent envelope: `{ "statusCode": 400, "message": "...", "error
 ### 5.1 Create record — `POST /records`
 
 Request (PEE):
+
 ```json
-{ "type": "PEE", "recordedAt": "2026-08-22T12:30:00+08:00",
-  "peeColor": "YELLOW", "peeFoam": "SLIGHT", "peeVolume": "MEDIUM",
-  "notes": "飲咗好多水", "needsPhotoUpload": true }
+{
+	"type": "PEE",
+	"recordedAt": "2026-08-22T12:30:00+08:00",
+	"peeColor": "YELLOW",
+	"peeFoam": "SLIGHT",
+	"peeVolume": "MEDIUM",
+	"notes": "飲咗好多水",
+	"needsPhotoUpload": true
+}
 ```
 
 Request (POO):
+
 ```json
-{ "type": "POO", "recordedAt": "2026-08-22T12:30:00+08:00",
-  "pooColor": "BROWN", "pooConsistency": 4, "notes": "", "needsPhotoUpload": true }
+{
+	"type": "POO",
+	"recordedAt": "2026-08-22T12:30:00+08:00",
+	"pooColor": "BROWN",
+	"pooConsistency": 4,
+	"notes": "",
+	"needsPhotoUpload": true
+}
 ```
 
 Response `201`:
+
 ```json
 {
-  "record": {
-    "id": "7f4d...",
-    "type": "PEE",
-    "recordedAt": "2026-08-22T12:30:00+08:00",
-    "peeColor": "YELLOW", "peeFoam": "SLIGHT", "peeVolume": "MEDIUM",
-    "notes": "飲咗好多水",
-    "photoStoragePath": null, "photoUploadedAt": null,
-    "createdAt": "2026-08-22T12:31:00+08:00"
-  },
-  "photoUploadUrl": "https://<project>.supabase.co/storage/v1/object/upload/sign/...",
-  "photoStoragePath": "records/<userId>/<recordId>.jpg"
+	"record": {
+		"id": "7f4d...",
+		"type": "PEE",
+		"recordedAt": "2026-08-22T12:30:00+08:00",
+		"peeColor": "YELLOW",
+		"peeFoam": "SLIGHT",
+		"peeVolume": "MEDIUM",
+		"notes": "飲咗好多水",
+		"photoStoragePath": null,
+		"photoUploadedAt": null,
+		"createdAt": "2026-08-22T12:31:00+08:00"
+	},
+	"photoUploadUrl": "https://<project>.supabase.co/storage/v1/object/upload/sign/...",
+	"photoStoragePath": "records/<userId>/<recordId>.jpg"
 }
 ```
+
 > `photoUploadUrl` / `photoStoragePath` are present only when `needsPhotoUpload` is
 > `true`. The presigned URL is a **PUT** signed upload URL with content-type bound
 > to `image/jpeg` (or negotiated content type).
@@ -425,21 +471,29 @@ Response `201`:
 ### 5.2 Confirm photo — `POST /records/:id/photo/confirm`
 
 Request:
+
 ```json
-{ "storagePath": "records/<userId>/<recordId>.jpg", "contentType": "image/jpeg", "sizeBytes": 245000 }
+{
+	"storagePath": "records/<userId>/<recordId>.jpg",
+	"contentType": "image/jpeg",
+	"sizeBytes": 245000
+}
 ```
+
 Response `200`: updated `record` (with `photoStoragePath`, `photoUploadedAt` set).
 Errors: `404` record not found / not owned; `400` invalid path.
 
 ### 5.3 List records — `GET /records?type=PEE&from=2026-08-01&to=2026-08-31&limit=50&cursor=...`
 
 Response `200`:
+
 ```json
 {
-  "items": [ { "record": "..." } ],
-  "nextCursor": "opaque-cursor-or-null"
+	"items": [{ "record": "..." }],
+	"nextCursor": "opaque-cursor-or-null"
 }
 ```
+
 Pagination via cursor on `(recordedAt, id)`. Default sort `recordedAt desc`.
 
 ### 5.4 Get record — `GET /records/:id`
@@ -457,24 +511,38 @@ Response `204`. Also deletes the photo from Storage and the analysis row (cascad
 ### 5.7 Trigger analysis — `POST /records/:id/analyze`
 
 Request: `{ "force": false }` (optional).
+
 - If `force=false` and a **COMPLETED** analysis exists → return it (no quota cost).
 - If no photo → `400 { message: "未上載相片" }`.
 - If FREE quota exhausted → `429 { message: "今個月嘅免費分析次數用晒喇" }`.
 
 Response `200` (synchronous; see §7 for latency):
+
 ```json
 {
-  "analysis": {
-    "id": "...", "recordId": "...", "model": "gemini-2.5-flash",
-    "status": "COMPLETED",
-    "reportJson": { "summary": "...", "observations": {}, "possibleInterpretations": [], "lifestyleHints": [], "redFlags": [], "confidence": "medium", "disclaimer": "..." },
-    "reportText": "一句簡單總結...",
-    "disclaimer": "呢個只係參考，唔係醫療建議。如果擔心，記得去睇醫生。",
-    "createdAt": "...", "completedAt": "..."
-  },
-  "quota": { "limit": 3, "usedThisMonth": 1, "remaining": 2 }
+	"analysis": {
+		"id": "...",
+		"recordId": "...",
+		"model": "gemini-2.5-flash",
+		"status": "COMPLETED",
+		"reportJson": {
+			"summary": "...",
+			"observations": {},
+			"possibleInterpretations": [],
+			"lifestyleHints": [],
+			"redFlags": [],
+			"confidence": "medium",
+			"disclaimer": "..."
+		},
+		"reportText": "一句簡單總結...",
+		"disclaimer": "呢個只係參考，唔係醫療建議。如果擔心，記得去睇醫生。",
+		"createdAt": "...",
+		"completedAt": "..."
+	},
+	"quota": { "limit": 3, "usedThisMonth": 1, "remaining": 2 }
 }
 ```
+
 > If the Gemini call fails, return `502` with `status: "FAILED"` and a friendly
 > retry message. The failed row is persisted so the client can show the error.
 
@@ -485,30 +553,34 @@ Response `200`: analysis, or `404` if none.
 ### 5.9 Stats summary — `GET /stats/summary?from=2026-08-01&to=2026-08-31`
 
 Response `200`:
+
 ```json
 {
-  "from": "2026-08-01", "to": "2026-08-31",
-  "daily": [ { "date": "2026-08-01", "peeCount": 3, "pooCount": 1 } ],
-  "totals": { "peeCount": 62, "pooCount": 24 },
-  "avgPerDay": { "pee": 2.0, "poo": 0.8 },
-  "mostCommonPeeColor": "YELLOW",
-  "mostCommonPooConsistency": 4
+	"from": "2026-08-01",
+	"to": "2026-08-31",
+	"daily": [{ "date": "2026-08-01", "peeCount": 3, "pooCount": 1 }],
+	"totals": { "peeCount": 62, "pooCount": 24 },
+	"avgPerDay": { "pee": 2.0, "poo": 0.8 },
+	"mostCommonPeeColor": "YELLOW",
+	"mostCommonPooConsistency": 4
 }
 ```
 
 ### 5.10 Settings — `GET /settings` and `PATCH /settings`
 
 GET response:
+
 ```json
 {
-  "language": "yue",
-  "reminderEnabled": true,
-  "reminderTimes": ["21:00"],
-  "photoRetentionDays": 14,
-  "plan": "FREE",
-  "analysisQuota": { "limit": 3, "usedThisMonth": 1, "remaining": 2 }
+	"language": "yue",
+	"reminderEnabled": true,
+	"reminderTimes": ["21:00"],
+	"photoRetentionDays": 14,
+	"plan": "FREE",
+	"analysisQuota": { "limit": 3, "usedThisMonth": 1, "remaining": 2 }
 }
 ```
+
 PATCH accepts a partial body (e.g. `{ "reminderTimes": ["09:00","21:00"] }`).
 Validation: `reminderTimes` are `HH:mm`, unique, max 3; `photoRetentionDays` 1–90.
 
@@ -533,6 +605,7 @@ optional later.
 5. Server verifies the object exists and saves metadata.
 
 **Image handling (client):**
+
 - Use `expo-image-picker` with `quality` compression, cap max dimension ~1600px,
   target JPEG < ~1MB. (Reduces storage + Gemini cost.)
 
@@ -544,12 +617,14 @@ from Storage and clear/nil the photo fields.
 ## 7. Gemini Integration
 
 ### 7.1 Setup
+
 - SDK: `@google/generative-ai`.
 - Model from env: `GEMINI_MODEL` (default `gemini-2.5-flash`).
 - Use `generateContent` with `generationConfig.responseMimeType = "application/json"`
   and `responseSchema` (structured output) to force the JSON shape in §2.3.
 
 ### 7.2 Input assembly
+
 - Fetch the image from Supabase Storage server-side (service role).
 - Encode as inline `inlineData` (base64) with mime type.
 - Build a text part containing the structured form fields:
@@ -573,6 +648,7 @@ Bristol 糞便分類：1=一粒粒好硬，2=一條條表面凹凸，3=一條條
 ```
 
 ### 7.4 Response validation & storage
+
 - Parse Gemini JSON, validate with `AnalysisReportSchema` (zod).
 - On validation failure → mark `FAILED` and retry once with a fix-up instruction;
   if still invalid, return a graceful fallback message.
@@ -580,9 +656,10 @@ Bristol 糞便分類：1=一粒粒好硬，2=一條條表面凹凸，3=一條條
 - Always persist the mandatory `disclaimer`.
 
 ### 7.5 Latency & error handling
+
 - v1 uses a **synchronous** call with a 30s server timeout (Gemini vision may take
   5–20s). The client shows a loading state.
-- *(Future optimization)* switch to async: return `202` + analysis id, poll
+- _(Future optimization)_ switch to async: return `202` + analysis id, poll
   `GET /records/:id/analysis`.
 
 ---
@@ -599,7 +676,7 @@ Bristol 糞便分類：1=一粒粒好硬，2=一條條表面凹凸，3=一條條
      set `analysisMonth = currentMonth`.
   3. If `plan === FREE && analysisUsedThisMonth >= 3` → reject with `429`.
   4. After a successful call → increment.
-- Product note (flag for review): decide whether re-running the *same* record in
+- Product note (flag for review): decide whether re-running the _same_ record in
   the same month should be free. Current spec charges 1 per fresh call.
 
 ---
@@ -613,18 +690,22 @@ Bristol 糞便分類：1=一粒粒好硬，2=一條條表面凹凸，3=一條條
 - Cap **3 slots/day**. Default `["21:00"]`.
 - Cantonese copy (example):
   - Title: `記低今日嘅記錄未？`
-  - Body: `今日痾咗未呀？撳一下就記低佢啦 💩`
+  - Body: `今日屙咗未呀？撳一下就記低佢啦 💩`
 - Permissions: request notification permission on first enable; handle denial
   gracefully (show a settings hint).
 
 ```ts
 // scheduling sketch
 for (const t of times) {
-  const [h, m] = t.split(':').map(Number);
-  await Notifications.scheduleNotificationAsync({
-    content: { title: '...', body: '...' },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: h, minute: m },
-  });
+	const [h, m] = t.split(":").map(Number);
+	await Notifications.scheduleNotificationAsync({
+		content: { title: "...", body: "..." },
+		trigger: {
+			type: Notifications.SchedulableTriggerInputTypes.DAILY,
+			hour: h,
+			minute: m,
+		},
+	});
 }
 ```
 
@@ -635,12 +716,14 @@ for (const t of times) {
 `@nestjs/schedule` cron:
 
 ### 10.1 Photo retention purge — daily 03:00 HKT
+
 1. Find users whose `photoRetentionDays` is set.
 2. For each, find records with `photoUploadedAt < now - photoRetentionDays`.
 3. Delete objects from Supabase Storage.
 4. Null the photo fields on those records (records/analysis text retained).
 
 ### 10.2 (Optional) Quota reset — not needed
+
 Handled on-the-fly (see §8).
 
 ---
@@ -657,7 +740,7 @@ Example copy:
 | Key | Value |
 |---|---|
 | `log.button.confirm` | `搞掂！` |
-| `log.empty` | `今日仲未痾喎，飲返多啲水先啦` |
+| `log.empty` | `今日仲未屙喎，飲返多啲水先啦` |
 | `log.success` | `記錄咗喇，做得好 👏` |
 | `analysis.disclaimer` | `呢個只係參考，唔係醫療建議。如果擔心，記得去睇醫生。` |
 | `quota.exhausted` | `今個月嘅免費分析次數用晒喇` |
@@ -667,6 +750,7 @@ Example copy:
 ## 12. Environment Variables
 
 ### Mobile (`apps/mobile/.env`, injected via EAS)
+
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
@@ -674,6 +758,7 @@ EXPO_PUBLIC_API_URL=https://api.example.com/v1
 ```
 
 ### Backend (`apps/api/.env`)
+
 ```
 DATABASE_URL=postgresql://...            # Supabase Postgres (pooler) connection string
 SUPABASE_URL=https://<project>.supabase.co
@@ -694,6 +779,7 @@ CORS_ORIGIN=*                            # tighten for prod
 ## 13. Testing Strategy
 
 ### Backend
+
 - **Unit:** services (quota logic, record validation, retention purge, Gemini
   response parsing).
 - **e2e:** Supertest against a test DB for auth + record CRUD + analyze flow
@@ -702,10 +788,12 @@ CORS_ORIGIN=*                            # tighten for prod
   Cantonese output; scripted/manual check when the prompt changes.
 
 ### Mobile
+
 - **Component:** Jest + React Native Testing Library (form validation, empty states).
 - **E2E (optional, later):** Maestro or Detox for the core "log a pee" flow.
 
 ### Contract
+
 - Shared zod schemas in `packages/shared` keep client/server in sync; add a
   lightweight typecheck CI step for both apps.
 
@@ -714,20 +802,24 @@ CORS_ORIGIN=*                            # tighten for prod
 ## 14. CI/CD & Deployment
 
 ### CI (GitHub Actions)
+
 - On PR: `npm run lint`, `tsc --noEmit`, unit tests (api + mobile).
 - Optional: Prisma migrate diff check.
 
 ### Backend deploy
+
 - NestJS → Docker image → **Railway / Render / Fly.io** (or any Node PaaS).
 - Run `prisma migrate deploy` on release.
 - Health check at `/health`.
 
 ### Mobile build
+
 - **EAS Build** for iOS (needs Apple Developer account) and Android (Play account).
 - Submit via EAS Submit / App Store Connect / Play Console.
 - Staging vs production channels via `eas.json` profiles.
 
 ### Infra
+
 - Supabase project (Postgres, Auth, Storage) provisioned; bucket `records` **private**.
 - Supabase Auth providers: email (enable), Apple + Google (enable, needs config).
 
@@ -736,6 +828,7 @@ CORS_ORIGIN=*                            # tighten for prod
 ## 15. Milestone Task Backlog
 
 ### M0 — Setup & scaffolding
+
 - [ ] Monorepo init (npm workspaces), shared package.
 - [ ] Expo app scaffold + navigation + theme tokens.
 - [ ] NestJS scaffold + Prisma + env validation.
@@ -744,6 +837,7 @@ CORS_ORIGIN=*                            # tighten for prod
 - [ ] **Decide bundle identifier / App ID.**
 
 ### M1 — MVP core (no AI)
+
 - [ ] Supabase auth sign-in/sign-up (email + Apple/Google).
 - [ ] Profile bootstrap + `GET/PATCH /settings`.
 - [ ] `POST /records`, `GET /records`, `GET /records/:id`, `PATCH`, `DELETE`.
@@ -753,6 +847,7 @@ CORS_ORIGIN=*                            # tighten for prod
 - [ ] Friendly brand tone baseline (copy + palette).
 
 ### M2 — Photo + retention
+
 - [ ] Image picker/camera + compression.
 - [ ] Presigned upload + `POST /records/:id/photo/confirm`.
 - [ ] Per-record photo view.
@@ -760,18 +855,21 @@ CORS_ORIGIN=*                            # tighten for prod
 - [ ] Retention purge cron job.
 
 ### M3 — On-demand Gemini analysis
+
 - [ ] `POST /records/:id/analyze` + `GET /records/:id/analysis`.
 - [ ] Gemini proxy (structured output, Cantonese prompt).
 - [ ] Quota (3/month free) + caching.
 - [ ] Analysis report UI (loading/error/disclaimer states).
 
 ### M4 — Trends & polish
+
 - [ ] `/stats/summary` + charts/calendar heatmap.
 - [ ] `GET /export`.
 - [ ] Consent flows (photo + analysis).
 - [ ] Beta on both stores (TestFlight / Play internal).
 
 ### M5 — Release
+
 - [ ] Store submission + review fixes.
 - [ ] Monitoring/logging.
 - [ ] (Later) AdMob + freemium subscription groundwork.
@@ -781,6 +879,7 @@ CORS_ORIGIN=*                            # tighten for prod
 ## 16. Definition of Done
 
 A feature is "done" when:
+
 - [ ] Types + zod validation are defined in `packages/shared`.
 - [ ] Backend endpoint implemented with JWT guard + per-user scoping.
 - [ ] Unit tests pass for the logic; e2e covers the happy path.

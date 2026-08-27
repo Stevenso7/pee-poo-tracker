@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
+import * as WebSocket from 'ws';
 
 /**
  * Wraps Supabase Storage (private bucket) for photo uploads. Uses the service
@@ -17,7 +18,12 @@ export class StorageService {
     if (!url || !key) {
       throw new Error('Supabase configuration is missing (SUPABASE_URL / SUPABASE_SECRET_KEY)');
     }
-    this.client = createClient(url, key, { auth: { persistSession: false } });
+    this.client = createClient(url, key, {
+      auth: { persistSession: false },
+      realtime: {
+        transport: WebSocket,
+      },
+    });
   }
 
   /** Returns a signed PUT URL the client uses to upload directly to Storage. */

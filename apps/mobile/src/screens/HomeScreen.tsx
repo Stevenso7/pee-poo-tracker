@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-	Animated,
-	Easing,
 	Image,
 	ImageBackground,
 	StyleSheet,
@@ -10,120 +8,14 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "../theme";
 import { strings } from "../i18n";
 import { api } from "../services/api";
+import { TabBar } from "../components/TabBar";
+import { Wiggle, Bob } from "../components/Animations";
 import type { Screen } from "../../App";
 
 type Props = { navigate: (s: Screen) => void };
-
-function Wiggle({
-	deg,
-	duration,
-	pause,
-	delay,
-	style,
-	children,
-}: {
-	deg: number;
-	duration: number;
-	pause: number;
-	delay: number;
-	style?: View["props"]["style"];
-	children: React.ReactNode;
-}) {
-	const v = useRef(new Animated.Value(0)).current;
-
-	useEffect(() => {
-		const anim = Animated.loop(
-			Animated.sequence([
-				Animated.delay(delay),
-				Animated.timing(v, {
-					toValue: 1,
-					duration,
-					easing: Easing.inOut(Easing.quad),
-					useNativeDriver: true,
-				}),
-				Animated.timing(v, {
-					toValue: -1,
-					duration: duration * 2,
-					easing: Easing.inOut(Easing.quad),
-					useNativeDriver: true,
-				}),
-				Animated.timing(v, {
-					toValue: 0,
-					duration,
-					easing: Easing.inOut(Easing.quad),
-					useNativeDriver: true,
-				}),
-				Animated.delay(pause),
-			]),
-		);
-		anim.start();
-		return () => anim.stop();
-	}, [v, delay, duration, pause]);
-
-	const rotate = v.interpolate({
-		inputRange: [-1, 1],
-		outputRange: [`-${deg}deg`, `${deg}deg`],
-	});
-
-	return (
-		<Animated.View style={[style, { transform: [{ rotate }] }]}>
-			{children}
-		</Animated.View>
-	);
-}
-
-function Bob({
-	dist,
-	duration,
-	delay,
-	style,
-	children,
-}: {
-	dist: number;
-	duration: number;
-	delay: number;
-	style?: View["props"]["style"];
-	children: React.ReactNode;
-}) {
-	const v = useRef(new Animated.Value(0)).current;
-
-	useEffect(() => {
-		const anim = Animated.loop(
-			Animated.sequence([
-				Animated.delay(delay),
-				Animated.timing(v, {
-					toValue: 1,
-					duration,
-					easing: Easing.inOut(Easing.quad),
-					useNativeDriver: true,
-				}),
-				Animated.timing(v, {
-					toValue: 0,
-					duration,
-					easing: Easing.inOut(Easing.quad),
-					useNativeDriver: true,
-				}),
-			]),
-		);
-		anim.start();
-		return () => anim.stop();
-	}, [v, delay, duration]);
-
-	const translateY = v.interpolate({
-		inputRange: [0, 1],
-		outputRange: [0, -dist],
-	});
-
-	return (
-		<Animated.View style={[style, { transform: [{ translateY }] }]}>
-			{children}
-		</Animated.View>
-	);
-}
 
 function localTodayStr() {
 	const now = new Date();
@@ -159,7 +51,11 @@ export default function HomeScreen({ navigate }: Props) {
 				<View style={styles.chips}>
 					<View style={styles.chip}>
 						<Wiggle deg={12} duration={260} pause={1800} delay={0}>
-							<Ionicons name="water" size={26} color="#56AEE2" />
+							<Image
+								source={require("../../../api/src/assets/record_pee.png")}
+								resizeMode="contain"
+								style={styles.chipIcon}
+							/>
 						</Wiggle>
 						<Text style={styles.chipText}>
 							{strings.todayPee} {today.pee}
@@ -168,10 +64,10 @@ export default function HomeScreen({ navigate }: Props) {
 					</View>
 					<View style={styles.chip}>
 						<Wiggle deg={12} duration={260} pause={1800} delay={900}>
-							<MaterialCommunityIcons
-								name="emoticon-poop"
-								size={26}
-								color={theme.colors.poo}
+							<Image
+								source={require("../../../api/src/assets/record_poo.png")}
+								resizeMode="contain"
+								style={styles.chipIcon}
 							/>
 						</Wiggle>
 						<Text style={styles.chipText}>
@@ -226,28 +122,11 @@ export default function HomeScreen({ navigate }: Props) {
 					</TouchableOpacity>
 				</View>
 
-				<View style={styles.tabBar}>
-					<TouchableOpacity
-						style={styles.tab}
-						onPress={() => navigate({ name: "history" })}>
-						<Ionicons
-							name="journal-outline"
-							size={30}
-							color={theme.colors.primary}
-						/>
-						<Text style={styles.tabLabel}>{strings.log}</Text>
-					</TouchableOpacity>
-					<TouchableOpacity
-						style={styles.tab}
-						onPress={() => navigate({ name: "settings" })}>
-						<Ionicons
-							name="settings-outline"
-							size={30}
-							color={theme.colors.primary}
-						/>
-						<Text style={styles.tabLabel}>{strings.settings}</Text>
-					</TouchableOpacity>
-				</View>
+				<TabBar
+					onTab={(tab) =>
+						navigate({ name: tab === "log" ? "history" : "settings" })
+					}
+				/>
 			</View>
 		</SafeAreaView>
 	);
@@ -297,6 +176,7 @@ const styles = StyleSheet.create({
 		fontWeight: "700",
 		color: theme.colors.text,
 	},
+	chipIcon: { width: 26, height: 26 },
 	cards: {
 		flex: 1,
 		flexDirection: "row",
@@ -323,23 +203,5 @@ const styles = StyleSheet.create({
 		fontWeight: "800",
 		color: theme.colors.text,
 		paddingBottom: theme.spacing.sm,
-	},
-	tabBar: {
-		flexDirection: "row",
-		backgroundColor: "#fcebd3",
-		borderTopWidth: 1.5,
-		borderTopColor: "#E9D8C8",
-		paddingBottom: theme.spacing.sm,
-		paddingTop: theme.spacing.md,
-	},
-	tab: {
-		flex: 1,
-		alignItems: "center",
-		gap: 2,
-	},
-	tabLabel: {
-		fontSize: 16,
-		fontWeight: "700",
-		color: theme.colors.text,
 	},
 });

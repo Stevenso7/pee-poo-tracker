@@ -1,22 +1,19 @@
 {
-  "expo": {
-    "name": "痾 the best",
-    "slug": "pee-poo-tracker",
-    "scheme": "peepoo",
-    "version": "0.1.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.yourco.poolog"
-    },
-    "android": {
-      "package": "com.yourco.poolog"
-    },
-    "plugins": [
-      "expo-image-picker",
-      "expo-notifications"
-    ]
-  }
+	"expo": {
+		"name": "屙 the best",
+		"slug": "pee-poo-tracker",
+		"scheme": "peepoo",
+		"version": "0.1.0",
+		"orientation": "portrait",
+		"userInterfaceStyle": "light",
+		"newArchEnabled": true,
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "com.yourco.poolog"
+		},
+		"android": {
+			"package": "com.yourco.poolog"
+		},
+		"plugins": ["expo-image-picker", "expo-notifications"]
+	}
 }

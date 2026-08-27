@@ -1,9 +1,9 @@
 ---
 name: pee-poo-tracker
-description: Working context for the "All the best" / 痾 the best mobile app (pee & poo tracker) — React Native (Expo) + NestJS + Supabase + Google Gemini. Load this skill when developing, debugging, or extending this project to instantly understand the stack, structure, and conventions.
+description: Working context for the "All the best" / 屙 the best mobile app (pee & poo tracker) — React Native (Expo) + NestJS + Supabase + Google Gemini. Load this skill when developing, debugging, or extending this project to instantly understand the stack, structure, and conventions.
 ---
 
-# All the best (痾 the best)
+# All the best (屙 the best)
 
 A fun, Cantonese-first bathroom logging app. Users log pee/poo events (color, foam,
 volume, consistency) with an optional photo, and can trigger **on-demand** AI analysis
@@ -11,6 +11,7 @@ volume, consistency) with an optional photo, and can trigger **on-demand** AI an
 app keeps it playful.
 
 ## Tech stack
+
 - **Mobile:** React Native (Expo SDK 52) + TypeScript. Supabase Auth (email),
   expo-image-picker, expo-notifications, @react-native-async-storage/async-storage.
 - **Backend:** NestJS 10 + Prisma 6. Supabase (Postgres + Auth + Storage). Google Gemini
@@ -18,6 +19,7 @@ app keeps it playful.
 - **Monorepo:** npm workspaces (`apps/mobile`, `apps/api`, `packages/shared`).
 
 ## Repository layout
+
 - `apps/mobile` — Expo app. Entry `index.js` → `App.tsx`. Screens in `src/screens`,
   auth context in `src/auth`, services in `src/services`.
 - `apps/api` — NestJS. Modules: `auth`, `records`, `analyses`, `stats`, `settings`,
@@ -26,6 +28,7 @@ app keeps it playful.
   (`npm run build:shared`).
 
 ## Critical gotchas (costly to re-discover)
+
 - Supabase signs JWTs with **ES256** (elliptic curve, `kty: EC`), NOT RS256.
 - JWKS URL is `{SUPABASE_URL}/auth/v1/.well-known/jwks.json` (note `.well-known`).
 - Supabase keys are new-format: `SUPABASE_SECRET_KEY` (`sb_secret_...`) and
@@ -40,6 +43,7 @@ app keeps it playful.
 - Free tier quota: **3 AI analyses/month** (tracked on `profiles.analysisUsedThisMonth`).
 
 ## Conventions
+
 - **Language:** UI and AI reports are in informal written Cantonese (口語粵文) —
   `屙尿` / `屙屎`, not formal written Chinese.
 - **Tone:** chill, friendly, funny. Light emoji throughout (💧 💩 🚽 ✨).
@@ -49,12 +53,14 @@ app keeps it playful.
   (defined in `packages/shared/src/enums.ts`).
 
 ## Common commands
+
 - `npm run dev:api` — NestJS on `:3000`, routes under `/v1`, Swagger at `/docs`.
 - `npm run dev:mobile` — Expo; press `i` for the iOS simulator.
 - `npm run build:shared` — rebuild shared after changing enums/labels.
 - `npm run prisma:deploy -w @pee-poo/api` — apply migrations.
 
 ## Current state
+
 Backend is fully working (DB migrated; auth; records CRUD; photo upload; analysis;
 stats; settings; retention purge job). Mobile app works: auth, home, log (with photo),
 history, record detail (analysis), settings. **AI analysis is untested** pending a

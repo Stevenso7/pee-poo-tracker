@@ -1,4 +1,4 @@
-# All the best (痾 the best) 🚽
+# All the best (屙 the best) 🚽
 
 A fun, Cantonese-first bathroom logging app.
 
