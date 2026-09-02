@@ -103,12 +103,6 @@ export default function HistoryScreen({
 											<Ionicons name="camera" size={14} color="#5C4A32" />
 										</View>
 									) : null}
-									{item.analysis?.status === "COMPLETED" ? (
-										<View style={[styles.badge, styles.badgeAi]}>
-											<Ionicons name="sparkles" size={14} color="#5C4A32" />
-											<Text style={styles.badgeText}>{strings.aiAnalysis}</Text>
-										</View>
-									) : null}
 								</View>
 							</TouchableOpacity>
 						);
@@ -119,7 +113,9 @@ export default function HistoryScreen({
 			<TabBar
 				active="log"
 				onTab={(tab) =>
-					navigate({ name: tab === "log" ? "history" : "settings" })
+					navigate({
+						name: tab === 'log' ? 'history' : tab === 'aiHistory' ? 'aiHistory' : 'settings',
+					})
 				}
 			/>
 		</SafeAreaView>
@@ -203,10 +199,4 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 10,
 	},
 	badgePhoto: { backgroundColor: "#D9B98A" },
-	badgeAi: { backgroundColor: "#F9CF4F" },
-	badgeText: {
-		fontSize: 14,
-		fontWeight: "700",
-		color: "#5C4A32",
-	},
 });

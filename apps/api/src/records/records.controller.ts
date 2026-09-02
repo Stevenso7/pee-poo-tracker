@@ -1,20 +1,11 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import {
   CurrentUser,
   CurrentUserInfo,
 } from '../common/decorators/current-user.decorator';
 import { RecordsService } from './records.service';
+import { AnalysesService } from '../analyses/analyses.service';
 import { CreateRecordDto } from './dto/create-record.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { ConfirmPhotoDto } from './dto/confirm-photo.dto';
@@ -22,7 +13,10 @@ import { ConfirmPhotoDto } from './dto/confirm-photo.dto';
 @Controller('records')
 @UseGuards(JwtAuthGuard)
 export class RecordsController {
-  constructor(private readonly records: RecordsService) {}
+  constructor(
+    private readonly records: RecordsService,
+    private readonly analyses: AnalysesService,
+  ) {}
 
   @Post()
   create(@CurrentUser() user: CurrentUserInfo, @Body() dto: CreateRecordDto) {
@@ -56,6 +50,18 @@ export class RecordsController {
     });
   }
 
+  @Get('analyses')
+  getUserAnalyses(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.analyses.getUserAnalyses(user.userId, {
+      limit: limit ? Number(limit) : 20,
+      offset: offset ? Number(offset) : 0,
+    });
+  }
+
   @Get(':id/photo')
   photo(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
     return this.records.getPhotoUrl(user.userId, id);
@@ -63,6 +69,9 @@ export class RecordsController {
 
   @Get(':id')
   get(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      throw new BadRequestException('Invalid record ID format');
+    }
     return this.records.findOwned(user.userId, id);
   }
 

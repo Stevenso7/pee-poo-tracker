@@ -8,5 +8,6 @@ import { GeminiService } from './gemini.service';
   imports: [StorageModule],
   controllers: [AnalysesController],
   providers: [AnalysesService, GeminiService],
+  exports: [AnalysesService],
 })
 export class AnalysesModule {}

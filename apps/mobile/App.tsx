@@ -7,6 +7,7 @@ import AuthScreen from './src/screens/AuthScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import LogRecordScreen from './src/screens/LogRecordScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
+import AIHistoryScreen from './src/screens/AIHistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import RecordDetailScreen from './src/screens/RecordDetailScreen';
 import { theme } from './src/theme';
@@ -15,6 +16,7 @@ export type Screen =
   | { name: 'home' }
   | { name: 'log'; type: 'PEE' | 'POO' }
   | { name: 'history' }
+  | { name: 'aiHistory' }
   | { name: 'detail'; id: string }
   | { name: 'settings' };
 
@@ -28,6 +30,8 @@ function MainNavigator() {
       return <LogRecordScreen type={screen.type} navigate={navigate} />;
     case 'history':
       return <HistoryScreen navigate={navigate} />;
+    case 'aiHistory':
+      return <AIHistoryScreen navigate={navigate} />;
     case 'detail':
       return <RecordDetailScreen id={screen.id} navigate={navigate} />;
     case 'settings':

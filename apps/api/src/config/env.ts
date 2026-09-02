@@ -9,7 +9,9 @@ const envSchema = z.object({
   SUPABASE_URL: z.string().url(),
   SUPABASE_SECRET_KEY: z.string().min(1),
   SUPABASE_JWKS_URL: z.string().url().optional(),
-  GEMINI_API_KEY: z.string().min(1),
+  GCP_PROJECT_ID: z.string().min(1),
+  GCP_LOCATION: z.string().default('us-central1'),
+  GOOGLE_APPLICATION_CREDENTIALS: z.string().min(1),
   GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
   CORS_ORIGIN: z.string().default('*'),
 });

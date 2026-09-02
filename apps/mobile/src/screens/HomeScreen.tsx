@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import {
+	Alert,
 	Image,
 	ImageBackground,
+	Modal,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
@@ -13,6 +15,8 @@ import { strings } from "../i18n";
 import { api } from "../services/api";
 import { TabBar } from "../components/TabBar";
 import { Wiggle, Bob } from "../components/Animations";
+import AIAnalysisModal from "../components/AIAnalysisModal";
+import { Ionicons } from "@expo/vector-icons";
 import type { Screen } from "../../App";
 
 type Props = { navigate: (s: Screen) => void };
@@ -26,6 +30,37 @@ function localTodayStr() {
 
 export default function HomeScreen({ navigate }: Props) {
 	const [today, setToday] = useState({ pee: 0, poo: 0 });
+	const [showAIModal, setShowAIModal] = useState(false);
+	const [aiSubmitting, setAISubmitting] = useState(false);
+
+	const handleAISubmit = async (params: {
+		type: "PEE" | "POO";
+		days: number;
+	}) => {
+		setAISubmitting(true);
+		try {
+			const res = await api.batchAnalyze({ ...params, force: false });
+			if (res.failedCount > 0) {
+				const failedMsg = res.failed
+					.map((f) => `${f.recordId.slice(0, 8)}: ${f.error}`)
+					.join("\n");
+				Alert.alert(
+					"部分分析失敗",
+					`成功 ${res.newCount} 次，失敗 ${res.failedCount} 次\n\n${failedMsg}`,
+				);
+			} else {
+				Alert.alert("完成", `AI 分析完成！共分析 ${res.newCount} 次記錄`);
+			}
+			setShowAIModal(false);
+		} catch (err) {
+			Alert.alert(
+				strings.error,
+				err instanceof Error ? err.message : strings.pleaseTryAgain,
+			);
+		} finally {
+			setAISubmitting(false);
+		}
+	};
 
 	useEffect(() => {
 		api
@@ -122,9 +157,26 @@ export default function HomeScreen({ navigate }: Props) {
 					</TouchableOpacity>
 				</View>
 
+				<TouchableOpacity
+					style={styles.aiButton}
+					onPress={() => setShowAIModal(true)}>
+					<Ionicons name="sparkles" size={28} color="#FFFFFF" />
+					<Text style={styles.aiButtonText}>AI 分析</Text>
+				</TouchableOpacity>
+
+				<AIAnalysisModal
+					visible={showAIModal}
+					onClose={() => setShowAIModal(false)}
+					onSubmit={handleAISubmit}
+					submitting={aiSubmitting}
+				/>
+
 				<TabBar
+					active="aiHistory"
 					onTab={(tab) =>
-						navigate({ name: tab === "log" ? "history" : "settings" })
+						navigate({
+							name: tab === 'log' ? 'history' : tab === 'aiHistory' ? 'aiHistory' : 'settings',
+						})
 					}
 				/>
 			</View>
@@ -203,5 +255,28 @@ const styles = StyleSheet.create({
 		fontWeight: "800",
 		color: theme.colors.text,
 		paddingBottom: theme.spacing.sm,
+	},
+	aiButton: {
+		marginTop: theme.spacing.lg,
+		marginBottom: theme.spacing.md,
+		paddingVertical: theme.spacing.md,
+		paddingHorizontal: theme.spacing.xl,
+		borderRadius: theme.radius.lg,
+		backgroundColor: theme.colors.primary,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: theme.spacing.sm,
+		alignSelf: "center",
+		shadowColor: theme.colors.primary,
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	aiButtonText: {
+		color: "#FFFFFF",
+		fontSize: 18,
+		fontWeight: "800",
 	},
 });

@@ -68,6 +68,12 @@ export interface AnalysisItem {
   disclaimer?: string | null;
   createdAt: string;
   completedAt?: string | null;
+  record?: {
+    id: string;
+    type: 'PEE' | 'POO';
+    recordedAt: string;
+    photoStoragePath?: string | null;
+  } | null;
 }
 
 export interface AnalysisQuota {
@@ -120,6 +126,31 @@ export const api = {
       `/records/${id}/analyze`,
       { method: 'POST', body: JSON.stringify({ force }) },
     ),
+
+  batchAnalyze: (params: { type: 'PEE' | 'POO'; days: number; force?: boolean }) =>
+    apiFetch<{
+      analyses: AnalysisItem[];
+      newCount: number;
+      totalCount: number;
+      failed: { recordId: string; error: string }[];
+      failedCount: number;
+      quota: AnalysisQuota;
+    }>(
+      '/records/batch-analyze',
+      { method: 'POST', body: JSON.stringify(params) },
+    ),
+
+  getAnalyses: (params?: { limit?: number; offset?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.limit) qs.set('limit', String(params.limit));
+    if (params?.offset) qs.set('offset', String(params.offset));
+    const query = qs.toString();
+    return apiFetch<{
+      analyses: AnalysisItem[];
+      total: number;
+      hasMore: boolean;
+    }>(`/records/analyses${query ? `?${query}` : ''}`);
+  },
 
   getSummary: (params?: { from?: string; to?: string; tz?: number }) => {
     const qs = new URLSearchParams();
