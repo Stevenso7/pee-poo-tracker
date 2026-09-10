@@ -10,7 +10,9 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import AIHistoryScreen from './src/screens/AIHistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import RecordDetailScreen from './src/screens/RecordDetailScreen';
+import PooCompletionScreen from './src/screens/PooCompletionScreen';
 import { theme } from './src/theme';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 export type Screen =
   | { name: 'home' }
@@ -18,7 +20,8 @@ export type Screen =
   | { name: 'history' }
   | { name: 'aiHistory' }
   | { name: 'detail'; id: string }
-  | { name: 'settings' };
+  | { name: 'settings' }
+  | { name: 'pooCompletion'; consistency: number; recordId?: string };
 
 function MainNavigator() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' });
@@ -36,6 +39,8 @@ function MainNavigator() {
       return <RecordDetailScreen id={screen.id} navigate={navigate} />;
     case 'settings':
       return <SettingsScreen navigate={navigate} />;
+    case 'pooCompletion':
+      return <PooCompletionScreen navigate={navigate} consistency={screen.consistency} recordId={screen.recordId} />;
     case 'home':
     default:
       return <HomeScreen navigate={navigate} />;
@@ -63,10 +68,12 @@ function Root() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="auto" />
-        <Root />
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <StatusBar style="auto" />
+          <Root />
+        </AuthProvider>
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }

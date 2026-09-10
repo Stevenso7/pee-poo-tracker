@@ -136,7 +136,7 @@ export default function PooLogForm({
 	const submit = async () => {
 		setSubmitting(true);
 		try {
-			await createRecordWithPhoto({
+			const record = await createRecordWithPhoto({
 				type: "POO",
 				fields: {
 					pooColor,
@@ -145,8 +145,7 @@ export default function PooLogForm({
 				},
 				photo,
 			});
-			Alert.alert(strings.logSuccess);
-			navigate({ name: "home" });
+			navigate({ name: "pooCompletion", consistency: pooConsistency ?? 4, recordId: record.id });
 		} catch (err) {
 			Alert.alert(
 				strings.error,

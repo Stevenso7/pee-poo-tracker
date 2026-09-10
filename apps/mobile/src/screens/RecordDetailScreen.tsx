@@ -17,6 +17,10 @@ import {
   POO_COLOR_LABELS,
   POO_CONSISTENCY_LABELS,
   type AnalysisReport,
+  type PeeColor,
+  type PeeFoam,
+  type PeeVolume,
+  type PooColor,
 } from '@pee-poo/shared';
 import { theme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -183,19 +187,19 @@ export default function RecordDetailScreen({
             {record.peeColor ? (
               <Field
                 label={strings.color}
-                value={PEE_COLOR_LABELS[record.peeColor] ?? record.peeColor}
+                value={PEE_COLOR_LABELS[record.peeColor as PeeColor] ?? record.peeColor}
               />
             ) : null}
             {record.peeFoam ? (
               <Field
                 label={strings.foam}
-                value={PEE_FOAM_LABELS[record.peeFoam] ?? record.peeFoam}
+                value={PEE_FOAM_LABELS[record.peeFoam as PeeFoam] ?? record.peeFoam}
               />
             ) : null}
             {record.peeVolume ? (
               <Field
                 label="量"
-                value={PEE_VOLUME_LABELS[record.peeVolume] ?? record.peeVolume}
+                value={PEE_VOLUME_LABELS[record.peeVolume as PeeVolume] ?? record.peeVolume}
               />
             ) : null}
           </>
@@ -204,7 +208,7 @@ export default function RecordDetailScreen({
             {record.pooColor ? (
               <Field
                 label={strings.color}
-                value={POO_COLOR_LABELS[record.pooColor] ?? record.pooColor}
+                value={POO_COLOR_LABELS[record.pooColor as PooColor] ?? record.pooColor}
               />
             ) : null}
             {record.pooConsistency != null ? (

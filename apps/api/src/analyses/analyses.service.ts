@@ -276,20 +276,20 @@ const analysis = await this.prisma.analysis.upsert({
 				});
 
 if (!analysis) {
-analysis = await this.prisma.analysis.create({
-            data: {
-              recordId: record.id,
-              userId,
-              model: this.gemini.model,
-              status: 'PENDING',
-            },
-          });
-        } else {
-analysis = await this.prisma.analysis.update({
-            where: { id: analysis.id },
-            data: { status: 'PENDING', model: this.gemini.model },
-          });
-        }
+      analysis = await this.prisma.analysis.create({
+        data: {
+          recordId: record.id,
+          userId,
+          model: this.gemini.model,
+          status: 'PENDING',
+        },
+      });
+    } else {
+      analysis = await this.prisma.analysis.update({
+        where: { id: analysis.id },
+        data: { status: 'PENDING', model: this.gemini.model },
+      });
+    }
 
 				const formText = this.buildFormText(record);
 				let report: any;

@@ -75,7 +75,10 @@ export const strings = {
 	saved: "已儲存",
 	error: "出錯",
 	pleaseTryAgain: "請再試一次",
-	analysisFailed: "分析失敗，請再試一次",
-	noAnalysisYet: "仲未分析，撳「分析」用 AI 睇下～",
-	photoNotLoaded: "相片未能顯示",
+analysisFailed: "分析失敗，請再試一次",
+  noAnalysisYet: "仲未分析，撳「分析」用 AI 睇下～",
+  photoNotLoaded: "相片未能顯示",
+  pooCompletionTitle: "屙屎完成！",
+  shareYourWin: "分享你嘅勝利",
+  done: "搞掂",
 } as const;

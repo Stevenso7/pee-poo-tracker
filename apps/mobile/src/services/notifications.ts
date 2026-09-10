@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { SchedulableTriggerInputTypes } from 'expo-notifications';
 import { strings } from '../i18n';
 
 export function configureNotifications() {
@@ -32,7 +33,7 @@ export async function scheduleDailyReminders(times: string[]): Promise<void> {
         title: strings.appName,
         body: strings.reminderBody,
       },
-      trigger: { hour, minute, repeats: true },
+      trigger: { type: SchedulableTriggerInputTypes.DAILY, hour, minute },
     });
   }
 }
