@@ -40,17 +40,7 @@ export default function HomeScreen({ navigate }: Props) {
 		setAISubmitting(true);
 		try {
 			const res = await api.batchAnalyze({ ...params, force: false });
-			if (res.failedCount > 0) {
-				const failedMsg = res.failed
-					.map((f) => `${f.recordId.slice(0, 8)}: ${f.error}`)
-					.join("\n");
-				Alert.alert(
-					"部分分析失敗",
-					`成功 ${res.newCount} 次，失敗 ${res.failedCount} 次\n\n${failedMsg}`,
-				);
-			} else {
-				Alert.alert("完成", `AI 分析完成！共分析 ${res.newCount} 次記錄`);
-			}
+			Alert.alert("完成", `AI 分析完成！共分析 ${res.totalCount} 筆記錄（1 次額度）`);
 			setShowAIModal(false);
 		} catch (err) {
 			Alert.alert(

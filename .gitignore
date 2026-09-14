@@ -39,3 +39,6 @@ coverage/
 # Prisma
 apps/api/prisma/migrations/dev.db*
 apps/api/pee-poo-tracker-*.json
+
+# Opencode (local, not part of repo)
+.opencode/

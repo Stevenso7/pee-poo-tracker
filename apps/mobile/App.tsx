@@ -10,6 +10,7 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import AIHistoryScreen from './src/screens/AIHistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import RecordDetailScreen from './src/screens/RecordDetailScreen';
+import BatchDetailScreen from './src/screens/BatchDetailScreen';
 import PooCompletionScreen from './src/screens/PooCompletionScreen';
 import { theme } from './src/theme';
 import ErrorBoundary from './src/components/ErrorBoundary';
@@ -20,6 +21,7 @@ export type Screen =
   | { name: 'history' }
   | { name: 'aiHistory' }
   | { name: 'detail'; id: string }
+  | { name: 'batchDetail'; id: string }
   | { name: 'settings' }
   | { name: 'pooCompletion'; consistency: number; recordId?: string };
 
@@ -37,6 +39,8 @@ function MainNavigator() {
       return <AIHistoryScreen navigate={navigate} />;
     case 'detail':
       return <RecordDetailScreen id={screen.id} navigate={navigate} />;
+    case 'batchDetail':
+      return <BatchDetailScreen id={screen.id} navigate={navigate} />;
     case 'settings':
       return <SettingsScreen navigate={navigate} />;
     case 'pooCompletion':

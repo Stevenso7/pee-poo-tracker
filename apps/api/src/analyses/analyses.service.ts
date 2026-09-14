@@ -11,6 +11,7 @@ import { StorageService } from "../storage/storage.service";
 import { GeminiService } from "./gemini.service";
 import {
 	AnalysisReportSchema,
+	BatchAnalysisReportSchema,
 	FREE_ANALYSIS_LIMIT,
 	PEE_COLOR_LABELS,
 	PEE_FOAM_LABELS,
@@ -231,126 +232,115 @@ const analysis = await this.prisma.analysis.upsert({
 			);
 		}
 
-		const recordIds = records.map((r) => r.id);
-		const existing = await this.prisma.analysis.findMany({
-			where: { recordId: { in: recordIds } },
-		});
-
-		const toAnalyze = force
-			? records
-			: records.filter(
-					(r) =>
-						!existing.find(
-							(a) => a.recordId === r.id && a.status === "COMPLETED",
-						),
-				);
-
-		if (toAnalyze.length === 0) {
-			const cached = await this.prisma.analysis.findMany({
-				where: { recordId: { in: recordIds } },
+		// Check for existing completed batch analysis for same type/days
+		if (!force) {
+			const existingBatch = await this.prisma.batchAnalysis.findFirst({
+				where: {
+					userId,
+					type,
+					days,
+					status: "COMPLETED",
+				},
+				orderBy: { createdAt: "desc" },
 			});
-			return {
-				analyses: cached,
-				newCount: 0,
-				totalCount: records.length,
-				quota: this.quotaView(profile),
-			};
+			if (existingBatch) {
+				return {
+					batchAnalysis: existingBatch,
+					newCount: 0,
+					totalCount: records.length,
+					quota: this.quotaView(profile),
+				};
+			}
 		}
 
-		const needed = toAnalyze.length;
-		if (profile.plan === "FREE" && used + needed > FREE_ANALYSIS_LIMIT) {
+		// Quota: batch analysis counts as ONE use
+		if (profile.plan === "FREE" && used + 1 > FREE_ANALYSIS_LIMIT) {
 			throw new HttpException(
-				`需要 ${needed} 次分析，但本月剩餘 ${FREE_ANALYSIS_LIMIT - used} 次`,
+				"今個月嘅免費分析次數用晒喇",
 				HttpStatus.TOO_MANY_REQUESTS,
 			);
 		}
 
-		const results: any[] = [];
-		const failed: { recordId: string; error: string }[] = [];
-		let newUsed = used;
-
-		for (const record of toAnalyze) {
-			try {
-				let analysis = await this.prisma.analysis.findFirst({
-					where: { recordId: record.id },
-				});
-
-if (!analysis) {
-      analysis = await this.prisma.analysis.create({
-        data: {
-          recordId: record.id,
-          userId,
-          model: this.gemini.model,
-          status: 'PENDING',
-        },
-      });
-    } else {
-      analysis = await this.prisma.analysis.update({
-        where: { id: analysis.id },
-        data: { status: 'PENDING', model: this.gemini.model },
-      });
-    }
-
+		// Prepare all records for batch analysis
+		const recordData = await Promise.all(
+			records.map(async (record) => {
 				const formText = this.buildFormText(record);
-				let report: any;
+				let imageBase64: string | undefined;
+				let mimeType: string | undefined;
 
 				if (record.photoStoragePath) {
 					const { data: blob, contentType } = await this.storage.download(
 						record.photoStoragePath,
 					);
 					const arrayBuffer = await blob.arrayBuffer();
-					const imageBase64 = Buffer.from(arrayBuffer).toString("base64");
-					const raw = await this.gemini.analyzeImage({
-						imageBase64,
-						mimeType: record.photoContentType || "image/jpeg",
-						formText,
-					});
-					report = AnalysisReportSchema.parse(raw);
-				} else {
-					const raw = await this.gemini.analyzeText(formText);
-					report = AnalysisReportSchema.parse(raw);
+					imageBase64 = Buffer.from(arrayBuffer).toString("base64");
+					mimeType = record.photoContentType || "image/jpeg";
 				}
 
-				const updated = await this.prisma.analysis.update({
-					where: { id: analysis.id },
-					data: {
-						status: "COMPLETED",
-						reportJson: report as any,
-						reportText: report.summary,
-						disclaimer: report.disclaimer,
-						inputSnapshot: { formText, promptVersion: 1 } as any,
-						completedAt: new Date(),
-					},
-				});
+				return { formText, imageBase64, mimeType, recordId: record.id };
+			}),
+		);
 
-				results.push(updated);
-				newUsed++;
-			} catch (err) {
-				console.error(`Analysis failed for ${record.id}:`, err);
-				failed.push({
-					recordId: record.id,
-					error: err instanceof Error ? err.message : String(err),
-				});
-				// Continue with other records
-			}
-		}
-
-		const updatedProfile = await this.prisma.profile.update({
-			where: { userId },
+		// Create pending batch analysis record
+		const batchAnalysis = await this.prisma.batchAnalysis.create({
 			data: {
-				analysisUsedThisMonth: newUsed,
-				analysisMonth: this.currentMonth(),
+				userId,
+				type,
+				days,
+				model: this.gemini.model,
+				status: "PENDING",
+				recordCount: records.length,
+				inputSnapshot: {
+					records: recordData.map(r => ({ recordId: r.recordId, formText: r.formText })),
+					promptVersion: 1,
+				} as any,
 			},
 		});
 
-		return {
-			analyses: results,
-			newCount: results.length,
-			totalCount: records.length,
-			failed,
-			failedCount: failed.length,
-			quota: this.quotaView(updatedProfile),
-		};
+		try {
+			// Single batch call to Gemini
+			const raw = await this.gemini.analyzeBatch({ records: recordData });
+			const report = BatchAnalysisReportSchema.parse(raw);
+
+			// Update batch analysis with result
+			const updated = await this.prisma.batchAnalysis.update({
+				where: { id: batchAnalysis.id },
+				data: {
+					status: "COMPLETED",
+					reportJson: report as any,
+					reportText: report.summary,
+					disclaimer: report.disclaimer,
+					completedAt: new Date(),
+				},
+			});
+
+			const updatedProfile = await this.prisma.profile.update({
+				where: { userId },
+				data: {
+					analysisUsedThisMonth: used + 1,
+					analysisMonth: this.currentMonth(),
+				},
+			});
+
+			return {
+				batchAnalysis: updated,
+				newCount: 1,
+				totalCount: records.length,
+				quota: this.quotaView(updatedProfile),
+			};
+		} catch (err) {
+			await this.prisma.batchAnalysis
+				.update({
+					where: { id: batchAnalysis.id },
+					data: { status: "FAILED", completedAt: new Date() },
+				})
+				.catch(() => undefined);
+
+			if (err instanceof HttpException) {
+				throw err;
+			}
+			throw new InternalServerErrorException("分析失敗，請再試一次");
+		}
 	}
 
 	async getUserAnalyses(
@@ -396,6 +386,37 @@ if (!analysis) {
 			analyses: validAnalyses,
 			total,
 			hasMore: offset + validAnalyses.length < total,
+		};
+	}
+
+	async getUserBatchAnalyses(
+		userId: string,
+		options: { limit?: number; offset?: number } = {},
+	) {
+		const { limit = 20, offset = 0 } = options;
+
+		const [batchAnalyses, total] = await Promise.all([
+			this.prisma.batchAnalysis.findMany({
+				where: {
+					userId,
+					status: 'COMPLETED',
+				},
+				orderBy: { completedAt: 'desc' },
+				take: limit,
+				skip: offset,
+			}),
+			this.prisma.batchAnalysis.count({
+				where: {
+					userId,
+					status: 'COMPLETED',
+				},
+			}),
+		]);
+
+		return {
+			batchAnalyses,
+			total,
+			hasMore: offset + batchAnalyses.length < total,
 		};
 	}
 }

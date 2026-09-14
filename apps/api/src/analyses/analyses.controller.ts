@@ -47,16 +47,4 @@ export class AnalysesController {
       dto.force ?? false,
     );
   }
-
-  @Get('analyses')
-  getUserAnalyses(
-    @CurrentUser() user: CurrentUserInfo,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string,
-  ) {
-    return this.analyses.getUserAnalyses(user.userId, {
-      limit: limit ? Number(limit) : 20,
-      offset: offset ? Number(offset) : 0,
-    });
-  }
 }

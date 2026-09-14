@@ -9,6 +9,7 @@ import { AnalysesService } from '../analyses/analyses.service';
 import { CreateRecordDto } from './dto/create-record.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { ConfirmPhotoDto } from './dto/confirm-photo.dto';
+import { BatchAnalyzeDto } from '../analyses/dto/batch-analyze.dto';
 
 @Controller('records')
 @UseGuards(JwtAuthGuard)
@@ -57,6 +58,18 @@ export class RecordsController {
     @Query('offset') offset?: string,
   ) {
     return this.analyses.getUserAnalyses(user.userId, {
+      limit: limit ? Number(limit) : 20,
+      offset: offset ? Number(offset) : 0,
+    });
+  }
+
+  @Get('batch-analyses')
+  getUserBatchAnalyses(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.analyses.getUserBatchAnalyses(user.userId, {
       limit: limit ? Number(limit) : 20,
       offset: offset ? Number(offset) : 0,
     });

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { AnalysisReport } from '@pee-poo/shared';
+import type { AnalysisReport, BatchAnalysisReport } from '@pee-poo/shared';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/v1';
 
@@ -76,6 +76,21 @@ export interface AnalysisItem {
   } | null;
 }
 
+export interface BatchAnalysisItem {
+  id: string;
+  userId: string;
+  type: 'PEE' | 'POO';
+  days: number;
+  model: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  reportJson?: BatchAnalysisReport | null;
+  reportText?: string | null;
+  disclaimer?: string | null;
+  recordCount: number;
+  createdAt: string;
+  completedAt?: string | null;
+}
+
 export interface AnalysisQuota {
   limit: number;
   usedThisMonth: number;
@@ -129,16 +144,26 @@ export const api = {
 
   batchAnalyze: (params: { type: 'PEE' | 'POO'; days: number; force?: boolean }) =>
     apiFetch<{
-      analyses: AnalysisItem[];
+      batchAnalysis: BatchAnalysisItem;
       newCount: number;
       totalCount: number;
-      failed: { recordId: string; error: string }[];
-      failedCount: number;
       quota: AnalysisQuota;
     }>(
       '/records/batch-analyze',
       { method: 'POST', body: JSON.stringify(params) },
     ),
+
+  getBatchAnalyses: (params?: { limit?: number; offset?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.limit) qs.set('limit', String(params.limit));
+    if (params?.offset) qs.set('offset', String(params.offset));
+    const query = qs.toString();
+    return apiFetch<{
+      batchAnalyses: BatchAnalysisItem[];
+      total: number;
+      hasMore: boolean;
+    }>(`/records/batch-analyses${query ? `?${query}` : ''}`);
+  },
 
   getAnalyses: (params?: { limit?: number; offset?: number }) => {
     const qs = new URLSearchParams();

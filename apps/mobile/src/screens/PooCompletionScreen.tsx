@@ -158,6 +158,13 @@ export default function PooCompletionScreen({ navigate, consistency, recordId }:
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right", "bottom"]}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleDone}>
+          <Ionicons name="arrow-undo" size={30} color={theme.colors.primary} />
+        </TouchableOpacity>
+      </View>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -232,6 +239,14 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.sm,
+    width: "100%",
+  },
+  backButton: {
+    padding: theme.spacing.xs,
   },
   scrollContent: {
     flexGrow: 1,

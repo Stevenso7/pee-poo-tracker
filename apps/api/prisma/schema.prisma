@@ -71,8 +71,9 @@ model Profile {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  records  Record[]
-  analyses Analysis[]
+  records         Record[]
+  analyses        Analysis[]
+  batchAnalyses   BatchAnalysis[]
 
   @@map("profiles")
 }
@@ -122,4 +123,25 @@ model Analysis {
   profile Profile @relation(fields: [userId], references: [userId])
 
   @@map("analyses")
+}
+
+model BatchAnalysis {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @db.Uuid
+  type           RecordType
+  days           Int
+  model          String
+  status         AnalysisStatus @default(PENDING)
+  inputSnapshot  Json?
+  reportJson     Json?
+  reportText     String?
+  disclaimer     String?
+  recordCount    Int
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6)
+  completedAt    DateTime?      @db.Timestamptz(6)
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@index([userId, createdAt])
+  @@map("batch_analyses")
 }

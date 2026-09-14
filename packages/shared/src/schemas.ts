@@ -59,6 +59,23 @@ export const AnalysisReportSchema = z.object({
 
 export type AnalysisReport = z.infer<typeof AnalysisReportSchema>;
 
+export const BatchAnalysisReportSchema = z.object({
+  summary: z.string(),
+  overallTrend: z.string(),
+  observations: z.object({
+    colorPatterns: z.string(),
+    consistencyPatterns: z.string(),
+    frequency: z.string(),
+  }),
+  possibleInterpretations: z.array(z.string()).max(2),
+  lifestyleHints: z.array(z.string()).max(2),
+  redFlags: z.array(z.string()).max(1),
+  confidence: z.enum(['low', 'medium', 'high']),
+  disclaimer: z.string(),
+});
+
+export type BatchAnalysisReport = z.infer<typeof BatchAnalysisReportSchema>;
+
 export const UpdateSettingsSchema = z.object({
   language: z.string().optional(),
   reminderEnabled: z.boolean().optional(),
