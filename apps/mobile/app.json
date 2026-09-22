@@ -7,12 +7,17 @@
 		"orientation": "portrait",
 		"userInterfaceStyle": "light",
 		"newArchEnabled": true,
+		"icon": "./assets/icon.png",
 		"ios": {
 			"supportsTablet": true,
 			"bundleIdentifier": "com.yourco.poolog"
 		},
 		"android": {
-			"package": "com.yourco.poolog"
+			"package": "com.yourco.poolog",
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/icon.png",
+				"backgroundColor": "#FFF8F2"
+			}
 		},
 		"plugins": ["expo-image-picker", "expo-notifications"]
 	}
