@@ -115,11 +115,13 @@ export default function AuthScreen() {
 				style={styles.container}
 				behavior={Platform.OS === "ios" ? "padding" : undefined}>
 				<View style={styles.content}>
-					<Image
-						source={require("../../../api/src/assets/login-hero-section.png")}
-						resizeMode="cover"
-						style={{ width, height: heroHeight }}
-					/>
+					<View style={styles.heroBg}>
+						<Image
+							source={require("../../../api/src/assets/login-hero-section.png")}
+							resizeMode="cover"
+							style={{ width, height: heroHeight }}
+						/>
+					</View>
 
 					<View style={[styles.form, compact && styles.formCompact]}>
 						{recovering ? (
@@ -351,6 +353,9 @@ const styles = StyleSheet.create({
 	content: {
 		flex: 1,
 		justifyContent: "space-between",
+	},
+	heroBg: {
+		backgroundColor: theme.colors.background,
 	},
 	form: {
 		paddingHorizontal: "17%",
